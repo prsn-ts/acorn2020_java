@@ -59,4 +59,10 @@ public class MyObject {
 	public void doSome(Radio r, Speaker s) {
 		System.out.println("doSome() 메소드가 호출되었습니다.");
 	}
+	//Phone 객체 생성하기위한 메소드
+	public void phoneOb(Phone p, String name, String color) {
+		p.name = name;
+		p.color = color;
+		p.show();
+	}
 }
