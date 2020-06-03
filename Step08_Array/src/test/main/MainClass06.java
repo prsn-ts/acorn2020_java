@@ -14,45 +14,27 @@ public class MainClass06 {
 		 *  모두 다 입력 받은 후 for 문을 이용해서 배열에 저장된
 		 *  모든 문자열을 콘솔창에 순서대로 출력하는 코드를 작성해 보세요.
 		 */
-		
+		//Scanner 객체를 생성해서 참조값을 지역 변수에 담기
 		Scanner scan = new Scanner(System.in);
-		System.out.println("문자열을 입력하세요:");
+		//문자열(String) 5개를 담을 수 있는 배열 객체 생성해서 참조값을 지역변수에 담기
 		String inputStr[] = new String[5];
-		inputStr[0] = scan.next();
-		inputStr[1] = scan.next();
-		inputStr[2] = scan.next();
-		inputStr[3] = scan.next();
-		inputStr[4] = scan.next();
+//		inputStr[0] = scan.next();
+//		inputStr[1] = scan.next();
+//		inputStr[2] = scan.next();
+//		inputStr[3] = scan.next();
+//		inputStr[4] = scan.next(); -> 효율적이지 못하다.(for문을 생각해보길 바람)
 		for(int i=0;i<inputStr.length;i++) {
+			System.out.println("문자열을 입력하세요:");
+			inputStr[i] = scan.next();
 			System.out.println(inputStr[i]);
 		}
 		
-		
-		/*
-		 *  2. Random 객체를 이용해서 로또 번호를 6개 랜덤하게 얻어내서
-		 *  	배열에 저장한다.
-		 *  	모두다 저장이 되면 for 문을 이용해서 배열에 저장된 모든 로또 번호를
-		 *  	콘솔창에 순서대로 출력하는 코드를 작성해 보세요.
-		 */
-//		Random rand = new Random();
-//		int lottoNum[] = new int[6];
-//		lottoNum[0] = (rand.nextInt(45))+1;
-//		lottoNum[1] = (rand.nextInt(45))+1;
-//		lottoNum[2] = (rand.nextInt(45))+1;
-//		lottoNum[3] = (rand.nextInt(45))+1;
-//		lottoNum[4] = (rand.nextInt(45))+1;
-//		lottoNum[5] = (rand.nextInt(45))+1;
-//		for(int i=0;i<lottoNum.length;i++) {
-//			/* 변수 활용
-//			int tmp = lottoNum[i];
-//			System.out.println(tmp);
-//			*/
-//			//한줄 정리
-//			System.out.println(lottoNum[i]);
-//		}
-		
-		
-		
+		for(int i=0; i<inputStr.length; i++) {
+			//i번째 방에 있는 String 객체의 참조값을 불러온다.
+			String tmp = inputStr[i];
+			//콘솔에 출력한다.
+			System.out.println(tmp);
+		}	
 		
 		
 //		InputStream a = System.in;
