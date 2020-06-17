@@ -22,6 +22,7 @@ import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JTextArea;
+import javax.swing.filechooser.FileSystemView;
 
 import javafx.stage.FileChooser;
 
@@ -33,7 +34,9 @@ public class Quiz03 extends JFrame implements ActionListener{
 	
 	//생성자
 	public Quiz03() {
+		//프레임의 제목 설정
 		setTitle("나의 파일");
+		//프레임의 레이아웃 지정
 		setLayout(new BorderLayout());
 		//메뉴 아이템 3개 만들기
 		JMenuItem item_new = new JMenuItem("New");
@@ -49,9 +52,14 @@ public class Quiz03 extends JFrame implements ActionListener{
 		menu1.add(item_new);
 		menu1.add(item_save);
 		menu1.add(item_open);
+		
+		JMenu menu2 = new JMenu();
+		menu2.setText("도움말");
+		
 		//메뉴바에 메뉴 추가
 		JMenuBar mb = new JMenuBar();
 		mb.add(menu1);
+		mb.add(menu2);
 		//프레임에 메뉴바 장착
 		setJMenuBar(mb);
 		
@@ -69,6 +77,7 @@ public class Quiz03 extends JFrame implements ActionListener{
 	}
 	//main 메소드
 	public static void main(String[] args) {
+		//프레임을 만들어서 화면에 띄우는 작업을 한다.
 		Quiz03 f = new Quiz03();
 		f.setBounds(100, 100, 500, 500);
 		f.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -78,53 +87,76 @@ public class Quiz03 extends JFrame implements ActionListener{
 	//이벤트리스너 발생시 실행부분
 	@Override
 	public void actionPerformed(ActionEvent e) {
-		
 		String command = e.getActionCommand();
 		if(command.equals("new")) {
+			area.setText("");
 			area.setVisible(true);
-			
+			area.grabFocus(); //new 메뉴아이템을 텍스트창을 열면 커서가 깜박이면서 포커스를 잡는다.
 		}else if(command.equals("open")) {
-//			FileChooser fc = new FileChooser(); 
-//	        fc.setTitle("타이틀"); // 창의 제목
-//			FileReader fr = new FileReader(memoFile);
-//			BufferedReader br=new BufferedReader(fr);
-//			while(true) {
-//				//반복문 돌면서 문자열을 줄단위로(개행기호 기준) 읽어낸다.
-//				String line = br.readLine(); // readLine 메소드가 개행기호는 읽지않는다.
-//				if(line==null) { //더이상 읽을 코드가 없으면
-//					break; //반복문 탈출
-//				}
-//				//콘솔창에 개행기호 없이 한글자 한글자 출력하기
-//				System.out.println(line);
-//			}
-			
+			area.setText("");
+			openAction();
 		}else if(command.equals("save")) {
-			msg = new JOptionPane();
-			int select = msg.showConfirmDialog(this, "저장하시겠습니까?");
-			if(select == msg.YES_OPTION) {
-				try {
-					memoFile = new File("c:/acorn2020/myFolder/text1.txt");
-					//실제로 파일이 존재하는 지 여부
-					boolean isExist = memoFile.exists();
-					if(!isExist) {
-						//파일을 실제로 만든다.
-						memoFile.createNewFile();
+			saveAction();
+		}
+	}
+	
+	public void openAction() {
+		try {
+			JFileChooser fc = new JFileChooser("c:/");
+			int result = fc.showOpenDialog(this);
+			if(result == JFileChooser.APPROVE_OPTION) {
+				//open 할 예정인 파일 객체의 참조값 얻어오기
+				File file = fc.getSelectedFile();
+				FileReader fr = new FileReader(file);
+				BufferedReader br=new BufferedReader(fr);
+				while(true) {
+					String line = br.readLine();
+					if(line == null) { // 더이상 읽을 문자열이 없다면
+						break; //반복문 탈출
 					}
-					//파일에 문자열을 출력할 객체
-					FileWriter fw = new FileWriter(memoFile);
-					fw.write(area.getText());
-					fw.flush();
-					fw.close(); // .close() 시점에 파일이 만들어진다.	
-				} catch (IOException e1) {
-					// TODO Auto-generated catch block
-					e1.printStackTrace();
-				}    //파일명과 같은 파일명이 존재할시 덧붙여쓸여부판단
-				msg.showMessageDialog(this, "저장되었습니다."); //저장 후 확인메세지 출력
-				area.setText(""); //저장 후에 입력했던 내용 삭제
-			}else if(select == msg.NO_OPTION) {
-				msg.showMessageDialog(this, "취소되었습니다");
+					//JTextArea 에 문자열을 개행기호와 함께 append (누적 출력) 하기
+					area.append(line);
+					area.append("\r\n");
+				}
+				//JtextArea 가 화면에 보이도록 설정.
+				area.setVisible(true);
+				br.close();
 			}
-		}	
+		}catch(FileNotFoundException fnfe) {
+			// TODO Auto-generated catch block
+			fnfe.printStackTrace();
+		}catch(IOException ie) {
+			// TODO Auto-generated catch block
+			ie.printStackTrace();
+		}
+	}
+	
+	public void saveAction() {
+		msg = new JOptionPane();
+		int select = msg.showConfirmDialog(this, "저장하시겠습니까?");
+		if(select == msg.YES_OPTION) {
+			JFileChooser fc = new JFileChooser("c:/");
+			int result = fc.showSaveDialog(this);
+			try {
+				if(result == JFileChooser.APPROVE_OPTION) {
+					String content = area.getText();
+					//새로 만들 예정인 File 객체 의 참조값 얻어오기 
+					File file =fc.getSelectedFile();
+					FileWriter fr = new FileWriter(file);
+					BufferedWriter bw = new BufferedWriter(fr);
+					bw.write(content);
+					bw.flush();
+					bw.close(); //버퍼 사용 후 종료.
+					msg.showMessageDialog(this, "저장되었습니다."); //저장 후 확인메세지 출력
+					area.setText(""); //저장 후에 입력했던 내용 삭제
+				}	
+			} catch (IOException e1) {
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
+			}    //파일명과 같은 파일명이 존재할시 덧붙여쓸여부판단
+		}else if(select == msg.NO_OPTION) {
+			msg.showMessageDialog(this, "취소되었습니다");
+		}
 	}
 		
 }
