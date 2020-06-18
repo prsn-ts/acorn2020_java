@@ -1,4 +1,4 @@
-package example4;
+package example5;
 
 
 import java.io.BufferedReader;
@@ -112,14 +112,11 @@ public class ServerMain {
 			}catch(Exception e) {
 				e.printStackTrace();
 			}finally {
+				//접속이 끊겨서 종료 되는 스레드는 List에서 제거한다.
+				threadList.remove(this); //접속이 끊긴 클라이언트를 응대하던 스레드의 참조값을 지정(this)해서 ThreadList List에서 삭제.
 				try {
-					//접속이 끊긴 클라이언트의 스레드들을 스레드 목록에서 지운다.
-					//접속이 끊기자마자 그 접속이 끊긴것을 가리키는 this로 지워야할 대상을 정한다.
-					threadList.remove(this);
 					if(socket!=null)socket.close();
-				} catch (Exception e) {
-					
-				}
+				} catch (Exception e) {}
 			}
 			
 		}
