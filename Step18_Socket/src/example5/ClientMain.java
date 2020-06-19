@@ -24,15 +24,41 @@ import javax.swing.JTextArea;
 import javax.swing.JTextField;
 import javax.swing.border.Border;
 
+import org.json.JSONException;
 import org.json.JSONObject;
 
 /*
+ *  JSON
+ *  
+ *  - Java Script Object Notation (자바스크립트 객체 표기법을 따르는 문자열, 자바스크립트 객체를 보기쉽게 표기하기위해 사용.)
+ *  
+ *  - 데이터의 type(JSON에서 지원하는 표기하는 방법 6가지)
+ *  1. {}
+ *  2. []
+ *  3. "xxx"
+ *  4. 10 or 10.1
+ *  5. true or false
+ *  6. null
+ *  
+ *  - JSON 예제
+ *  
+ *  {"num":1, "name":"김구라", "isMan":true, "phone" : null} -> {"key": value}, value의 값으로 위에 데이터 타입의 6가지에 한해서 올 수 있다.
+ *  ex)
+ *  [10, 20, 30, 40, 50]
+ *  
+ *  ["김구라","해골","원숭이"]
+ *  
+ *  [{},{},{}]
+ *  
+ *  {"name":"kim", "friends":["김구라","해골","원숭이"] }
+ *  
+ *  
  *  메세지의 종류
  *  
- *  1. 일반 대화 메세지 {"name":"김구라", "msg":"안녕하세요"} -> 중괄호는 JSONObject로 처리
- *  2. 누군가 입장했다는 메세지 {"enter":"김구라"}
- *  3. 누군가 퇴장했다는 메세지 {"out":"원숭이"}
- *  4. 참여자 목록 메세지 {"members":["김구라","해골","원숭이"]} -> 대괄호는 JSONArray
+ *  1. 일반 대화 메세지 {"type":"msg","name":"김구라", "content":"안녕하세요"} -> 중괄호는 JSONObject로 처리
+ *  2. 누군가 입장했다는 메세지 {"type":"enter", "name":"김구라"}
+ *  3. 누군가 퇴장했다는 메세지 {"type":"out", "name":"원숭이"}
+ *  4. 참여자 목록 메세지 {"type":"members", "list":["김구라","해골","원숭이"]} -> 대괄호는 JSONArray
  */
 
 public class ClientMain extends JFrame implements ActionListener, KeyListener{
@@ -64,21 +90,22 @@ public class ClientMain extends JFrame implements ActionListener, KeyListener{
 			OutputStreamWriter osw = new OutputStreamWriter(os);
 			bw = new BufferedWriter(osw);
 			//내가 입장한다고 서버에 메세지를 보낸다.
-			// "{"enter" : "김구라"}" 이런 형식으로 서버에 메세지를 보내기 위함.
+			// "{"type":"enter", "name":"대화명"}" 이런 형식으로 서버에 메세지를 보내기 위함.
 			String msg = "{\"enter\":\""+chatName+"\"}"; //JSON 없이 출력하기 위한 모양(복잡하다..)
 			
-			//JSON 라이브러리를 이용해서 "{"enter" : "김구라"}" 출력.
+			//접속이 성공하는 시점인 socket = new Socket("192.168.0.30", 5000); 이 구문 이후에 서버로부터 메세지를 받을 스레드도 시작을 시킨다.
+			new ClientThread().start();
+			
+			//JSON 라이브러리를 이용해서 "{"type":"enter", "name":"대화명"}" 출력.
 			JSONObject jsonObj = new JSONObject();
-			jsonObj.put("enter", chatName);
+			jsonObj.put("type", "enter");
+			jsonObj.put("name", chatName);
 			String msg2 = jsonObj.toString();
 			
 			//BufferedWriter 객체를 이용해서 보내기
-			bw.write(msg);
+			bw.write(msg2);
 			bw.newLine(); //한 메세지 찍고 개행하기위한 개행 메소드 호출.
-			
-			System.out.println(msg+" | "+msg2);
-			//접속이 성공하는 시점인 socket = new Socket("192.168.0.30", 5000); 이 구문 이후에 서버로부터 메세지를 받을 스레드도 시작을 시킨다.
-			new ClientThread().start();
+			bw.flush();
 		}catch(Exception e) {
 			e.printStackTrace();
 		}
@@ -144,8 +171,16 @@ public class ClientMain extends JFrame implements ActionListener, KeyListener{
 		//전송할 문자열
 		String msg = tf_msg.getText();
 		try {
+			//JSONObject 객체를 생성해서 정보를 구성하고
+			JSONObject jsonObj = new JSONObject();
+			jsonObj.put("type", "msg");
+			jsonObj.put("name", chatName);
+			jsonObj.put("content", msg);
+			//JSON 문자열을 얻어낸다.
+			String json = jsonObj.toString();
+			
 			//필드에 있는 BufferedWriter 객체의 참조값을 이용해서 서버에 문자열 출력하기
-			bw.write(chatName+" : "+msg);
+			bw.write(json);
 			bw.newLine(); //개행기호도 출력 (서버에서 줄단위로 읽어낼 예정)
 			bw.flush();
 		}catch(Exception e1) {
@@ -167,10 +202,13 @@ public class ClientMain extends JFrame implements ActionListener, KeyListener{
 				BufferedReader br = new BufferedReader(isr);
 				while(true) {
 					//다른 스레드(작업단위)를 통해 무한루프를 돌면서 서버로부터 문자열이 전송되는지 감시한다.
+					//서버로부터 문자열이 전송되는지 대기한다
 					String msg = br.readLine();
-					//JTextArea 에 출력하기
-					area.append(msg);
-					area.append("\r\n");
+					//updateTextArea 메소드를 선언하여 run() 간결화, JSONException 처리하는 try,catch문을 넣어 에러를 처리함.
+					updateTextArea(msg);
+//					//JTextArea 에 출력하기(다른 출력 메세지가 있어서 이 부분은 제외)
+//					area.append(msg);
+//					area.append("\r\n");
 					//최근 추가된 글 내용이 보일 수 있도록
 					int docLength = area.getDocument().getLength();
 					area.setCaretPosition(docLength);
@@ -184,8 +222,39 @@ public class ClientMain extends JFrame implements ActionListener, KeyListener{
 				
 				e.printStackTrace();
 			}
+		}// run()
+		
+		//JTextArea 에 문자열을 출력하는 메소드, JSONObject 예외 발생시에 대비하기 좋은 메소드
+		public void updateTextArea(String msg) {
+			try {
+				JSONObject jsonObj = new JSONObject(msg);
+				String type = jsonObj.getString("type");
+				if(type.equals("enter")) { //입장 메세지라면
+					//누가 입장했는지 읽어낸다
+					String name = jsonObj.getString("name");
+					area.append("["+name+"] 님이 입장했습니다.");
+					area.append("\r\n");
+				}else if(type.equals("msg")) { //대화 메세지라면
+					//누가
+					String name = jsonObj.getString("name");
+					//어떤 내용을
+					String content = jsonObj.getString("content");
+					//출력하기
+					area.append(name+" : "+content);
+					area.append("\r\n");
+				}else if(type.equals("out")) { //퇴장 메세지라면
+					//누가
+					String name = jsonObj.getString("name");
+					//출력하기
+					area.append("[[ "+name+" ]] 님이 퇴장했습니다.");
+					area.append("\r\n");
+				}
+			}catch(JSONException je) {
+				je.printStackTrace();
+			}
 		}
-	}
+		
+	}// class ClientThread
 	@Override
 	public void keyPressed(KeyEvent e) {
 		int code = e.getKeyCode();

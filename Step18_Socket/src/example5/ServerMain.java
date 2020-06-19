@@ -13,6 +13,8 @@ import java.net.Socket;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.json.JSONObject;
+
 public class ServerMain {
 	//필드
 	static List<ServerThread> threadList = new ArrayList<>();
@@ -56,6 +58,8 @@ public class ServerMain {
 		Socket socket;
 		//클라이언트에게 출력할 문자열 객체
 		BufferedWriter bw;
+		//클라이언트의 대화명을 저장할 필드
+		String chatName;
 		
 		//생성자의 인자로  Socket 객체를 전달받도록 한다.
 		public ServerThread(Socket socket) {
@@ -89,7 +93,6 @@ public class ServerMain {
 				//BufferedWriter 객체의 참조값을 필드에 저장하기
 				bw = new BufferedWriter(osw);
 				while(true) {
-					//클라이언트가 전송한 문자열 한줄 읽어들이기
 					//클라이언트의 접속이 끊기면 Exception 이 발생하면서
 					//catch 블럭으로 실행순서가 이동하면서 이 스레드는 종료 된다.
 					/*
@@ -101,7 +104,19 @@ public class ServerMain {
 					 *  실행순서가 try 블럭을 벗어나면 run() 메소드가 리턴하게 되고
 					 *  run() 메소드가 리턴되면 해당 스레드는 종료가 된다.
 					 */
+					//클라이언트가 전송한 문자열 한줄 읽어들이기
 					String msg = br.readLine();
+					//전송된 JSON 문자열을 사용할 준비를 한다.
+					JSONObject jsonObj = new JSONObject(msg);
+					//type을 읽어낸다.
+					String type = jsonObj.getString("type");
+					if(type.equals("enter")) {
+						//현재 스레드가 대응하는 클라이언트의 대화명을 필드에 저장한다.
+						String chatName = jsonObj.getString("name");
+						this.chatName = chatName;
+					}else if(type.equals("msg")) {
+						
+					}
 					System.out.println("메세지:"+msg);
 					//클라이언트에게 동일한 메세지를 보내는 메소드를 호출한다.
 					sendMessage(msg);
@@ -114,7 +129,13 @@ public class ServerMain {
 			}finally {
 				//접속이 끊겨서 종료 되는 스레드는 List에서 제거한다.
 				threadList.remove(this); //접속이 끊긴 클라이언트를 응대하던 스레드의 참조값을 지정(this)해서 ThreadList List에서 삭제.
+				// this(접속 끊긴 스레드) 가 퇴장 한다고 메세지를 보낸다
 				try {
+					//퇴장한 사람의 정보를 클라이언트로 보낸다.
+					JSONObject jsonObj = new JSONObject();
+					jsonObj.put("type", "out");
+					jsonObj.put("name", this.chatName);
+					sendMessage(jsonObj.toString());
 					if(socket!=null)socket.close();
 				} catch (Exception e) {}
 			}
