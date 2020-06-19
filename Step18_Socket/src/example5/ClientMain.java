@@ -14,9 +14,11 @@ import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.net.Socket;
+import java.util.Vector;
 
 import javax.swing.JButton;
 import javax.swing.JFrame;
+import javax.swing.JList;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
@@ -24,6 +26,7 @@ import javax.swing.JTextArea;
 import javax.swing.JTextField;
 import javax.swing.border.Border;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -72,45 +75,11 @@ public class ClientMain extends JFrame implements ActionListener, KeyListener{
 	JTextArea area; //채팅 내용을 JTextArea에서 보기 위함.
 	//대화명
 	String chatName;
+	//참여자 목록
+	JList<String> jList;
 	
 	//생성자
 	public ClientMain() {
-		//대화명을 입력받아서 필드에 저장한다.
-		chatName = JOptionPane.showInputDialog(this, "대화명을 입력하세요");
-		
-		setTitle("대화명:"+chatName);
-		
-		//서버에 소켓 접속을 한다.
-		try {
-			//접속이 성공되면 Socket 객체의 참조값이 반환된다.
-			//반환되는 객체의 참조값을 필드에 저장해 놓는다.
-			socket = new Socket("192.168.0.30", 5000);
-			//문자열을 서버에 전송(출력Output) 하기/ 서버에 문자열을 출력할 BufferedWriter 객체의 참조값을 얻어내서 필드에 저장해 놓는다.
-			OutputStream os = socket.getOutputStream();
-			OutputStreamWriter osw = new OutputStreamWriter(os);
-			bw = new BufferedWriter(osw);
-			//내가 입장한다고 서버에 메세지를 보낸다.
-			// "{"type":"enter", "name":"대화명"}" 이런 형식으로 서버에 메세지를 보내기 위함.
-			String msg = "{\"enter\":\""+chatName+"\"}"; //JSON 없이 출력하기 위한 모양(복잡하다..)
-			
-			//접속이 성공하는 시점인 socket = new Socket("192.168.0.30", 5000); 이 구문 이후에 서버로부터 메세지를 받을 스레드도 시작을 시킨다.
-			new ClientThread().start();
-			
-			//JSON 라이브러리를 이용해서 "{"type":"enter", "name":"대화명"}" 출력.
-			JSONObject jsonObj = new JSONObject();
-			jsonObj.put("type", "enter");
-			jsonObj.put("name", chatName);
-			String msg2 = jsonObj.toString();
-			
-			//BufferedWriter 객체를 이용해서 보내기
-			bw.write(msg2);
-			bw.newLine(); //한 메세지 찍고 개행하기위한 개행 메소드 호출.
-			bw.flush();
-		}catch(Exception e) {
-			e.printStackTrace();
-		}
-		
-		
 		//레이아웃을 BorderLayout 으로 지정하기
 		setLayout(new BorderLayout());
 		
@@ -144,6 +113,57 @@ public class ClientMain extends JFrame implements ActionListener, KeyListener{
 		
 		//엔터키로 메세지 전송가능하게 하기 위해
 		tf_msg.addKeyListener(this);
+		
+		//Vector 는 ArrayList 와 같다고 생각하고 사용하면된다.
+		//추가 기능(스레드동기화)가 있어서 조금 더 무겁다.
+		
+		//String[]에 JList 공간 확보를 위해 임시 문자열을 넣는다.
+		String[] title = {"참여자 목록"};
+		jList=new JList<String>(title);
+		jList.setBackground(Color.GREEN);
+		
+		//패널에 JList 를 배치하고
+		JPanel rightPanel = new JPanel();
+		rightPanel.add(jList);
+		rightPanel.setBackground(Color.green);
+		//패널을 프레임의 동쪽에 배치
+		add(rightPanel, BorderLayout.EAST);
+		
+		//대화명을 입력받아서 필드에 저장한다.
+		chatName = JOptionPane.showInputDialog(this, "대화명을 입력하세요");
+		
+		setTitle("대화명:"+chatName);
+		
+		//서버에 소켓 접속을 한다.
+		try {
+			//접속이 성공되면 Socket 객체의 참조값이 반환된다.
+			//반환되는 객체의 참조값을 필드에 저장해 놓는다.
+			socket = new Socket("192.168.0.15", 5000);
+			//문자열을 서버에 전송(출력Output) 하기/ 서버에 문자열을 출력할 BufferedWriter 객체의 참조값을 얻어내서 필드에 저장해 놓는다.
+			OutputStream os = socket.getOutputStream();
+			OutputStreamWriter osw = new OutputStreamWriter(os);
+			bw = new BufferedWriter(osw);
+			//내가 입장한다고 서버에 메세지를 보낸다.
+			// "{"type":"enter", "name":"대화명"}" 이런 형식으로 서버에 메세지를 보내기 위함.
+//					String msg = "{\"enter\":\""+chatName+"\"}"; //JSON 없이 출력하기 위한 모양(복잡하다..)
+			
+			//접속이 성공하는 시점인 socket = new Socket("192.168.0.30", 5000); 이 구문 이후에 서버로부터 메세지를 받을 스레드도 시작을 시킨다.
+			new ClientThread().start();
+			
+			//JSON 라이브러리를 이용해서 "{"type":"enter", "name":"대화명"}" 출력.
+			JSONObject jsonObj = new JSONObject();
+			jsonObj.put("type", "enter");
+			jsonObj.put("name", chatName);
+			String msg2 = jsonObj.toString();
+			
+			//BufferedWriter 객체를 이용해서 보내기
+			bw.write(msg2);
+			bw.newLine(); //한 메세지 찍고 개행하기위한 개행 메소드 호출.
+			bw.flush();
+		}catch(Exception e) {
+			e.printStackTrace();
+		}
+		
 	}
 	
 	public static void main(String[] args) {
@@ -248,6 +268,19 @@ public class ClientMain extends JFrame implements ActionListener, KeyListener{
 					//출력하기
 					area.append("[[ "+name+" ]] 님이 퇴장했습니다.");
 					area.append("\r\n");
+				}else if(type.equals("members")) {//대화 참여자 목록이 도착 시
+					//list 라는 키값으로 저장된 JSONArray 객체를 얻어온다.
+					JSONArray arr = jsonObj.getJSONArray("list");
+					//참여자 목록을 저장할 Vector
+					Vector<String> list = new Vector<>();
+					list.add("참여자 목록");
+					//반복문을 돌면서 참여자 목록을 다시 넣어준다. 참여자들을 참여자 목록에 추가시킨다. 
+					for(int i=0; i<arr.length(); i++) {
+						String tmp = arr.getString(i);
+						list.add(tmp);
+					}
+					//JList에 참여자 목록 연결하기
+					jList.setListData(list);
 				}
 			}catch(JSONException je) {
 				je.printStackTrace();
