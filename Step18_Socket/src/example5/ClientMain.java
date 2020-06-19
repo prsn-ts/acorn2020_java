@@ -80,6 +80,7 @@ public class ClientMain extends JFrame implements ActionListener, KeyListener{
 	
 	//생성자
 	public ClientMain() {
+		
 		//레이아웃을 BorderLayout 으로 지정하기
 		setLayout(new BorderLayout());
 		
@@ -145,7 +146,7 @@ public class ClientMain extends JFrame implements ActionListener, KeyListener{
 			bw = new BufferedWriter(osw);
 			//내가 입장한다고 서버에 메세지를 보낸다.
 			// "{"type":"enter", "name":"대화명"}" 이런 형식으로 서버에 메세지를 보내기 위함.
-//					String msg = "{\"enter\":\""+chatName+"\"}"; //JSON 없이 출력하기 위한 모양(복잡하다..)
+//			String msg = "{\"enter\":\""+chatName+"\"}"; //JSON 없이 출력하기 위한 모양(복잡하다..)
 			
 			//접속이 성공하는 시점인 socket = new Socket("192.168.0.30", 5000); 이 구문 이후에 서버로부터 메세지를 받을 스레드도 시작을 시킨다.
 			new ClientThread().start();
@@ -163,7 +164,6 @@ public class ClientMain extends JFrame implements ActionListener, KeyListener{
 		}catch(Exception e) {
 			e.printStackTrace();
 		}
-		
 	}
 	
 	public static void main(String[] args) {
