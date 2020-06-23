@@ -124,6 +124,7 @@ public class MemberDao {
 	public boolean insert(MemberDto dto) {
 		Connection conn = new DBConnect().getConn();
 		PreparedStatement pstmt = null;
+		//작업의 성공여부 확인을 위한 flag 변수 설정.
 		int flag = 0;
 		String sql = "INSERT INTO member(num, name, addr)"
 				+ " VALUES(member_seq.NEXTVAL, ?, ?)";
@@ -145,9 +146,9 @@ public class MemberDao {
 				
 			}
 		}
-		if(flag>0) {
+		if(flag>0) {//작업 성공 시 실행되는 부분
 			return true; //작업 성공이라는 의미에서 true 를 리턴한다.
-		}else {
+		}else {//작업 실패 시 실행되는 부분
 			return false; //작업 실패라는 의미에서 false 를 리턴한다.
 		}
 	}
