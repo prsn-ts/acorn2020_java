@@ -81,10 +81,7 @@ public class MemberDao {
 			rs = pstmt.executeQuery();
 			while(rs.next()) {
 				//MemberDto 타입의 dto 변수에 num, name, addr의 값을 세팅.
-				MemberDto dto = new MemberDto();
-				dto.setNum(rs.getInt("num"));
-				dto.setName(rs.getString("name"));
-				dto.setAddr(rs.getString("addr"));
+				MemberDto dto = new MemberDto(rs.getInt("num"), rs.getString("name"), rs.getString("addr"));
 				//list에 dto 변수 정보를 넣기.
 				list.add(dto);
 			}
@@ -96,16 +93,17 @@ public class MemberDao {
 	}
 	
 	//회원 한명의 정보를 DB 에서 삭제하는 메소드
-	public void delete(int num) {
+	public boolean delete(int num) {
 		Connection conn = null;
 		PreparedStatement pstmt = null;
+		int flag = 0;
 		try {
 			conn = new DBConnect().getConn();
 			String sql = "DELETE FROM member"
 					+ " WHERE num = ?";
 			pstmt = conn.prepareStatement(sql);
 			pstmt.setInt(1, num);
-			pstmt.executeUpdate();
+			flag = pstmt.executeUpdate();
 			System.out.println("회원 정보가 삭제 되었습니다.");
 		}catch(Exception e) {
 			e.printStackTrace();
@@ -115,19 +113,26 @@ public class MemberDao {
 				if(conn!=null)conn.close();
 			}catch(Exception e) {}
 		}
+		if(flag>0) {
+			return true;
+		}else {
+			return false;
+		}
 	}
 	
-	//회원 정보를 DB 에 저장하는 메소드
-	public void insert(MemberDto dto) {
+	//회원 정보를 DB 에 저장하는 메소드(작업의 성공여부가 boolean 으로 리턴된다)
+	public boolean insert(MemberDto dto) {
 		Connection conn = new DBConnect().getConn();
 		PreparedStatement pstmt = null;
+		int flag = 0;
 		String sql = "INSERT INTO member(num, name, addr)"
 				+ " VALUES(member_seq.NEXTVAL, ?, ?)";
 		try {
 			pstmt = conn.prepareStatement(sql);
 			pstmt.setString(1, dto.getName());
 			pstmt.setString(2, dto.getAddr());
-			pstmt.executeUpdate();
+			// sql 문을 수행하고 변화된 row 의 개수를 리턴 받는다. (1)
+			flag = pstmt.executeUpdate();
 			System.out.println("회원 정보가 추가되었습니다.");
 		} catch (SQLException e) {
 			// TODO Auto-generated catch block
@@ -140,13 +145,20 @@ public class MemberDao {
 				
 			}
 		}
+		if(flag>0) {
+			return true; //작업 성공이라는 의미에서 true 를 리턴한다.
+		}else {
+			return false; //작업 실패라는 의미에서 false 를 리턴한다.
+		}
 	}
 	//회원 정보를 DB 에서 수정하는 메소드
-	public void update(MemberDto dto) {
+	public boolean update(MemberDto dto) {
 		//DB 연결할 수 있는 객체 생성.
 		Connection conn = new DBConnect().getConn();
 		//sql 구문 세팅을 위한 pstmt 변수 선언.
 		PreparedStatement pstmt = null;
+		//작업의 성공여부 판단에 사용되는 변수
+		int flag = 0;
 		
 		String sql = "UPDATE member SET"
 				+ "  name = ?, addr = ?" 
@@ -156,7 +168,8 @@ public class MemberDao {
 			pstmt.setString(1, dto.getName());
 			pstmt.setString(2, dto.getAddr());
 			pstmt.setInt(3, dto.getNum());
-			pstmt.executeUpdate();
+			//update 된(변화된) row 의 개수가 리턴된다.
+			flag = pstmt.executeUpdate();
 			System.out.println("회원 정보를 수정했습니다.");
 		} catch (SQLException e) {
 			// TODO Auto-generated catch block
@@ -166,6 +179,11 @@ public class MemberDao {
 				if(pstmt!=null)pstmt.close();
 				if(conn!=null)conn.close();
 			}catch(Exception e) {}
+		}
+		if(flag>0) {
+			return true;
+		}else {
+			return false;
 		}
 	}
 }
