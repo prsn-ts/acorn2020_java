@@ -31,7 +31,7 @@ public class MemoDao {
 		ResultSet rs = null;
 		ArrayList<MemoDto> list = new ArrayList<MemoDto>();
 		conn = new DBConnect().getConn();
-		String sql = "SELECT * FROM MEMO";
+		String sql = "SELECT num, content, TO_CHAR(regdate, 'YYYY\"년  \"MM\"월  \"DD\"일  \"') AS regdate FROM MEMO";
 		try {
 			pstmt = conn.prepareStatement(sql);
 			rs = pstmt.executeQuery();
@@ -76,9 +76,9 @@ public class MemoDao {
 			e.printStackTrace();
 		}
 		if(flag > 0) {
-			return false;
-		}else {
 			return true;
+		}else {
+			return false;
 		}
 	}
 	

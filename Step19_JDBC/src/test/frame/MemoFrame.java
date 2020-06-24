@@ -62,7 +62,7 @@ public class MemoFrame extends JFrame implements ActionListener, PropertyChangeL
 		//JTable 만들기
 		table = new JTable();
 		//테이블의 칼럼명을 위한 String[] 선언.
-		String[] columnNames = {"순서, 할일, 날짜"};
+		String[] columnNames = {"순서", "할일", "날짜"};
 		//model 만들기
 		model = new DefaultTableModel(columnNames, 0) {
 			//인자로 전달되는 행(row), 열(column) 수정 가능 여부를 리턴하는 메소드  
